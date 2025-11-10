@@ -1,0 +1,33 @@
+{
+  "id": 999,
+  "name": "Nombre del Yate",
+  "slug": "nombre-del-yate",
+  "description": "Descripción corta y atractiva del yate",
+  "maxPeople": 10,
+  "priceRange": "<1000",
+  "mainImage": "/boats/nombre-del-yate/main.png",
+  "images": {
+    "cabin": [
+      "/boats/nombre-del-yate/cabin/interior1.jpeg",
+      "/boats/nombre-del-yate/cabin/interior2.jpeg"
+    ],
+    "deck": [
+      "/boats/nombre-del-yate/deck/deck1.jpeg"
+    ],
+    "yacht": [
+      "/boats/nombre-del-yate/yacht/yacht1.jpeg"
+    ],
+    "charter": [
+      "/boats/nombre-del-yate/Charter/charter1.png"
+    ],
+    "services": [
+      "/boats/nombre-del-yate/services/service1.png"
+    ]
+  },
+  "specs": {
+    "length": "70ft",
+    "type": "Motor Yacht",
+    "year": 2024
+  }
+}
+

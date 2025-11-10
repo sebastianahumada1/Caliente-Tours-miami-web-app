@@ -1,0 +1,131 @@
+{
+  "yachts": [
+    {
+      "id": 1,
+      "name": "FlyBridge 70Ft",
+      "slug": "flybridge-70ft",
+      "description": "Aicon 85 is the Perfect Yacht for the Bahamas and Overnight",
+      "maxPeople": 13,
+      "priceRange": "<1000",
+      "mainImage": "/boats/boat1.png",
+      "images": {
+        "cabin": [
+          "/boats/boat1/cabin/interior1.jpeg",
+          "/boats/boat1/cabin/interior2.jpeg",
+          "/boats/boat1/cabin/interior3.jpeg",
+          "/boats/boat1/cabin/interior4.jpeg",
+          "/boats/boat1/cabin/interior5.jpeg"
+        ],
+        "deck": [
+          "/boats/boat1/deck/deck1.jpeg",
+          "/boats/boat1/deck/deck2.jpeg",
+          "/boats/boat1/deck/deck3.jpeg"
+        ],
+        "yacht": [
+          "/boats/boat1/yacht/yacht1.jpeg",
+          "/boats/boat1/yacht/yacht2.jpeg",
+          "/boats/boat1/yacht/yacht3.jpeg"
+        ],
+        "charter": [
+          "/boats/boat1/Charter/charter1.png",
+          "/boats/boat1/Charter/charter2.png",
+          "/boats/boat1/Charter/charter3.png"
+        ],
+        "services": [
+          "/boats/boat1/services/service1.png",
+          "/boats/boat1/services/service2.png"
+        ]
+      },
+      "specs": {
+        "length": "70ft",
+        "type": "FlyBridge",
+        "year": 2023
+      }
+    },
+    {
+      "id": 2,
+      "name": "Yacht 2",
+      "slug": "yacht-2",
+      "description": "Luxury yacht perfect for day trips",
+      "maxPeople": 10,
+      "priceRange": "<1000",
+      "mainImage": "/boats/boat2.png",
+      "images": {
+        "cabin": [],
+        "deck": [],
+        "yacht": [],
+        "charter": [],
+        "services": []
+      },
+      "specs": {
+        "length": "65ft",
+        "type": "Motor Yacht",
+        "year": 2022
+      }
+    },
+    {
+      "id": 3,
+      "name": "Yacht 3",
+      "slug": "yacht-3",
+      "description": "Spacious yacht for family adventures",
+      "maxPeople": 12,
+      "priceRange": "<1000",
+      "mainImage": "/boats/boat3.png",
+      "images": {
+        "cabin": [],
+        "deck": [],
+        "yacht": [],
+        "charter": [],
+        "services": []
+      },
+      "specs": {
+        "length": "75ft",
+        "type": "Sport Yacht",
+        "year": 2023
+      }
+    },
+    {
+      "id": 4,
+      "name": "Yacht 4",
+      "slug": "yacht-4",
+      "description": "Premium yacht with modern amenities",
+      "maxPeople": 15,
+      "priceRange": "<2000",
+      "mainImage": "/boats/boat4.png",
+      "images": {
+        "cabin": [],
+        "deck": [],
+        "yacht": [],
+        "charter": [],
+        "services": []
+      },
+      "specs": {
+        "length": "80ft",
+        "type": "Luxury Yacht",
+        "year": 2024
+      }
+    },
+    {
+      "id": 5,
+      "name": "Yacht 5",
+      "slug": "yacht-5",
+      "description": "Exclusive yacht for special occasions",
+      "maxPeople": 14,
+      "priceRange": "<2000",
+      "mainImage": "/boats/boat5.png",
+      "images": {
+        "cabin": [],
+        "deck": [],
+        "yacht": [],
+        "charter": [],
+        "services": []
+      },
+      "specs": {
+        "length": "85ft",
+        "type": "Mega Yacht",
+        "year": 2024
+      }
+    }
+  ]
+}
+
