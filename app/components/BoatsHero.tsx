@@ -29,6 +29,7 @@ export function BoatsHero() {
   const [interiorFilter, setInteriorFilter] = useState<InteriorFilter>("Cabin"); // Filter for interior photos
   const [carouselMode, setCarouselMode] = useState<CarouselMode>("Interior"); // Control carousel type
   const [carouselActiveIndex, setCarouselActiveIndex] = useState(1); // For Price/Service carousel
+  const [previewImage, setPreviewImage] = useState<string | null>(null); // Image preview overlay
 
   // Filtrar yates según el precio seleccionado
   const getFilteredBoats = () => {
@@ -43,6 +44,17 @@ export function BoatsHero() {
     }
     
     return filtered;
+  };
+
+  const handleInteriorImageClick = (index: number, imageSrc: string) => {
+    setInteriorImageIndex(index);
+    if (index === interiorImageIndex) {
+      setPreviewImage(imageSrc);
+    }
+  };
+
+  const handleClosePreview = () => {
+    setPreviewImage(null);
   };
 
   const filteredBoats = getFilteredBoats();
@@ -196,9 +208,9 @@ export function BoatsHero() {
           </div>
 
           {/* Botón More photos - Solo en Cabin, Deck, Yacht */}
-          {carouselMode === "Interior" && (
+          {carouselMode === "Interior" && selectedBoat.morePhotosUrl && (
             <a 
-              href="https://calientetoursmiami.smugmug.com/55--PINK-AZIMUT-" 
+              href={selectedBoat.morePhotosUrl} 
               target="_blank" 
               rel="noopener noreferrer"
               className="px-8 text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg"
@@ -245,33 +257,35 @@ export function BoatsHero() {
                 
                 // Calcular transformaciones para efecto circular cóncavo
                 const isCenter = distance === 0;
-                const translateX = distance * 60; // Espaciado horizontal para 5 imágenes (separación aumentada)
+                const translateX = distance * 42; // Espaciado horizontal para 5 imágenes (30% más pegadas)
                 const translateY = isCenter ? 0 : Math.abs(distance) * 12; // Crear arco hacia abajo (cóncavo)
-                const scale = isCenter ? 1.2 : 0.8 - absDistance * 0.1;
+                const scale = isCenter ? 1.2 : 1.05 - absDistance * 0.05;
                 const zIndex = 10 - absDistance;
                 const rotateY = distance * 20; // Rotación para efecto circular
-                const rotateZ = distance * 6; // Rotación en Z para el arco cóncavo
-                const opacity = isCenter ? 1 : 0.8 - absDistance * 0.1;
+                const rotateZ = distance * 3; // Rotación en Z suavizada
+                const opacity = isCenter ? 1 : 0.85 - absDistance * 0.08;
                 
                 return (
                   <div
                     key={idx}
-                    onClick={() => setInteriorImageIndex(idx)}
+                    onClick={() => handleInteriorImageClick(idx, img)}
                     className="absolute cursor-pointer transition-all duration-500 ease-out"
                     style={{
                       transform: `translateX(${translateX}%) translateY(${translateY}%) scale(${scale}) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`,
                       zIndex,
                       opacity,
-                      width: '450px',
-                      height: '350px',
+                      width: "552px",
+                      height: "396px",
                     }}
                   >
                     <img
                       src={img}
                       alt={`Interior ${idx + 1}`}
-                      className="w-full h-full object-cover rounded-lg shadow-2xl border-8 border-white"
+                      className="w-full h-full object-cover rounded-xl shadow-2xl"
                       style={{ 
-                        transformStyle: 'preserve-3d',
+                        transformStyle: "preserve-3d",
+                        imageRendering: "auto",
+                        filter: isCenter ? "none" : "grayscale(25%)",
                       }}
                     />
                   </div>
@@ -296,15 +310,15 @@ export function BoatsHero() {
                 // Tamaños: central más grande, laterales escalonados
                 let width, height, scale;
                 if (isCenter) {
-                  width = 500; height = 333; scale = 1;
+                  width = 624; height = 415; scale = 1;
                 } else if (absDistance === 1) {
-                  width = 380; height = 253; scale = 0.95;
+                  width = 480; height = 319; scale = 0.95;
                 } else {
-                  width = 300; height = 200; scale = 0.9;
+                  width = 384; height = 255; scale = 0.9;
                 }
 
                 // Calcular posición horizontal para 5 imágenes (separación aumentada)
-                const translateX = normalizedDistance * 85;
+                const translateX = normalizedDistance * 60;
 
                 return (
                   <div
@@ -323,12 +337,7 @@ export function BoatsHero() {
                     <img
                       src={img.src}
                       alt={img.alt}
-                      className={`w-full h-full object-contain drop-shadow-2xl transition-all duration-1000 ${
-                        isCenter ? "" : "grayscale"
-                      }`}
-                      style={{
-                        filter: isCenter ? "none" : "grayscale(100%)",
-                      }}
+                      className="w-full h-full object-contain drop-shadow-2xl transition-all duration-1000"
                     />
                   </div>
                 );
@@ -615,6 +624,28 @@ export function BoatsHero() {
           &gt;4,000 USD
         </button>
       </div>
+      )}
+
+      {/* Image preview overlay */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/80 p-6"
+          onClick={handleClosePreview}
+        >
+          <button
+            onClick={handleClosePreview}
+            className="absolute top-6 right-6 px-4 py-2 bg-black text-white font-semibold rounded-lg shadow-lg hover:bg-gray-900 transition-colors"
+            style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif" }}
+          >
+            Close
+          </button>
+          <img
+            src={previewImage}
+            alt="Interior preview"
+            className="max-h-[90vh] max-w-[90vw] object-contain rounded-xl shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>
       )}
     </section>
   );

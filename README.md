@@ -4,12 +4,12 @@ Landing page moderna para alquiler de yates de lujo en Miami, construida con Nex
 
 ## 🚤 Gestión de Yates
 
-Los yates se gestionan mediante un archivo JSON dinámico. **[Ver guía completa →](./YACHT_MANAGEMENT.md)**
+Los yates se gestionan desde Supabase. **[Ver guía completa →](./YACHT_MANAGEMENT.md)**
 
-- Datos centralizados en `/public/data/yachts.json`
-- Agregar/editar yates sin tocar código
-- Soporte para 30+ yates
-- Imágenes organizadas por carpetas
+- Tabla `boats` en Supabase con campos tipados (nombre, slug, rangos de precio, galería opcional, etc.)
+- Columnas JSON (`images`, `specs`) para mantener la estructura actual del sitio
+- Actualizaciones en caliente: edita datos desde Supabase sin tocar código
+- Imágenes almacenadas en el bucket público `boats` de Supabase Storage (usa claves como `boats/boat1.png`)
 
 ## 🚀 Stack Tecnológico
 
@@ -48,9 +48,8 @@ RESEND_FROM_EMAIL=noreply@calientetoursmiami.com
 ```
 
 4. **Preparar imágenes**:
-Coloca las imágenes en `/public`:
-- `bg-miami.jpg` - Imagen de fondo del hero (1920x1080 o mayor)
-- `boats/` - Carpeta con imágenes de yates (ver [YACHT_MANAGEMENT.md](./YACHT_MANAGEMENT.md) para estructura completa)
+- `bg-miami.jpg` permanece en `/public` (fondo del hero).
+- Sube los assets de yates al bucket público `boats` en Supabase Storage y guarda las claves generadas (`boats/...`) en la tabla `boats`. Consulta [YACHT_MANAGEMENT.md](./YACHT_MANAGEMENT.md) para la estructura sugerida.
 
 5. **Ejecutar en desarrollo**:
 ```bash

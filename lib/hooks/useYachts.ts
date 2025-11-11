@@ -1,4 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import {
+  getSupabaseBrowserClient,
+  getPublicStorageUrl,
+} from "@/lib/supabase/client";
 
 export type Yacht = {
   id: number;
@@ -8,6 +12,7 @@ export type Yacht = {
   maxPeople: number;
   priceRange: string;
   mainImage: string;
+  morePhotosUrl: string | null;
   images: {
     cabin: string[];
     deck: string[];
@@ -22,6 +27,129 @@ export type Yacht = {
   };
 };
 
+type BoatImages = {
+  cabin?: string[];
+  deck?: string[];
+  yacht?: string[];
+  charter?: string[];
+  services?: string[];
+};
+
+type BoatSpecs = {
+  length?: string;
+  type?: string;
+  year?: number;
+};
+
+type BoatRow = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  max_people: number;
+  price_range: string;
+  main_image: string;
+  more_photos_url: string | null;
+  images: BoatImages | string | null;
+  specs: BoatSpecs | string | null;
+};
+
+function mapBoatRowToYacht(row: BoatRow): Yacht {
+  const parsedImages = normalizeBoatImages(row.images);
+  const parsedSpecs = normalizeBoatSpecs(row.specs);
+
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    maxPeople: row.max_people,
+    priceRange: row.price_range,
+    mainImage: getPublicStorageUrl(row.main_image),
+    morePhotosUrl: row.more_photos_url,
+    images: parsedImages,
+    specs: parsedSpecs,
+  };
+}
+
+function normalizeBoatImages(images: BoatRow["images"]): Yacht["images"] {
+  const parsed = parseJsonField<BoatImages>(images) ?? {};
+
+  return {
+    cabin: transformImageArray(parsed.cabin),
+    deck: transformImageArray(parsed.deck),
+    yacht: transformImageArray(parsed.yacht),
+    charter: transformImageArray(parsed.charter),
+    services: transformImageArray(parsed.services),
+  };
+}
+
+function normalizeBoatSpecs(specs: BoatRow["specs"]): Yacht["specs"] {
+  const parsed = parseJsonField<BoatSpecs>(specs) ?? {};
+
+  return {
+    length: parsed.length ?? "",
+    type: parsed.type ?? "",
+    year: parsed.year ?? 0,
+  };
+}
+
+function transformImageArray(list?: string[]) {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+
+  return list.map((item) => getPublicStorageUrl(item));
+}
+
+function parseJsonField<T>(value: T | string | null | undefined): T | null {
+  if (value == null) {
+    return null;
+  }
+
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value) as T;
+    } catch (error) {
+      console.warn("[supabase-boats] Failed to parse JSON field:", error);
+      return null;
+    }
+  }
+
+  return value;
+}
+
+type SupabaseError = {
+  message?: string;
+  details?: string;
+  hint?: string;
+  code?: string;
+};
+
+function getReadableErrorMessage(err: unknown) {
+  if (err instanceof Error && err.message) {
+    return err.message;
+  }
+
+  if (
+    err &&
+    typeof err === "object" &&
+    ("message" in err || "code" in err || "details" in err)
+  ) {
+    const supabaseErr = err as SupabaseError;
+    if (supabaseErr.message) {
+      return supabaseErr.message;
+    }
+    if (supabaseErr.code || supabaseErr.details) {
+      return `Supabase error ${supabaseErr.code ?? ""} ${
+        supabaseErr.details ?? ""
+      }`.trim();
+    }
+  }
+
+  return "Unexpected error while loading yachts";
+}
+
 export function useYachts() {
   const [yachts, setYachts] = useState<Yacht[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,15 +158,31 @@ export function useYachts() {
   useEffect(() => {
     async function loadYachts() {
       try {
-        const response = await fetch('/data/yachts.json');
-        if (!response.ok) {
-          throw new Error('Failed to load yachts data');
+        const supabase = getSupabaseBrowserClient();
+        if (!supabase) {
+          throw new Error("Supabase client not initialized");
         }
-        const data = await response.json();
-        setYachts(data.yachts);
+
+        const { data, error: queryError } = await supabase
+          .from("boats")
+          .select("*")
+          .order("id");
+
+        if (queryError) {
+          throw queryError;
+        }
+
+        if (!data) {
+          setYachts([]);
+          return;
+        }
+
+        const mappedYachts = data.map(mapBoatRowToYacht);
+        setYachts(mappedYachts);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        console.error('Error loading yachts:', err);
+        const formattedError = getReadableErrorMessage(err);
+        setError(formattedError);
+        console.error("[supabase-boats] Error loading yachts:", err);
       } finally {
         setLoading(false);
       }

@@ -7,7 +7,7 @@
       "description": "Aicon 85 is the Perfect Yacht for the Bahamas and Overnight",
       "maxPeople": 13,
       "priceRange": "<1000",
-      "mainImage": "/boats/boat1.png",
+      "mainImage": "/storage/v1/object/public/boats/boat1.png",
       "images": {
         "cabin": [
           "/boats/boat1/cabin/interior1.jpeg",
@@ -49,7 +49,7 @@
       "description": "Luxury yacht perfect for day trips",
       "maxPeople": 10,
       "priceRange": "<1000",
-      "mainImage": "/boats/boat2.png",
+      "mainImage": "https://yhbvaclwzcqozaojffku.supabase.co/storage/v1/object/public/boats/boat2.png",
       "images": {
         "cabin": [],
         "deck": [],
@@ -70,7 +70,7 @@
       "description": "Spacious yacht for family adventures",
       "maxPeople": 12,
       "priceRange": "<1000",
-      "mainImage": "/boats/boat3.png",
+      "mainImage": "https://yhbvaclwzcqozaojffku.supabase.co/storage/v1/object/public/boats/boat3.png",
       "images": {
         "cabin": [],
         "deck": [],
@@ -91,7 +91,7 @@
       "description": "Premium yacht with modern amenities",
       "maxPeople": 15,
       "priceRange": "<2000",
-      "mainImage": "/boats/boat4.png",
+      "mainImage": "https://yhbvaclwzcqozaojffku.supabase.co/storage/v1/object/public/boats/boat4.png",
       "images": {
         "cabin": [],
         "deck": [],
@@ -112,7 +112,7 @@
       "description": "Exclusive yacht for special occasions",
       "maxPeople": 14,
       "priceRange": "<2000",
-      "mainImage": "/boats/boat5.png",
+      "mainImage": "https://yhbvaclwzcqozaojffku.supabase.co/storage/v1/object/public/boats/boat5.png",
       "images": {
         "cabin": [],
         "deck": [],
