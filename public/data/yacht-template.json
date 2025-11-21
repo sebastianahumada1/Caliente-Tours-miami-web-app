@@ -4,7 +4,7 @@
   "slug": "nombre-del-yate",
   "description": "Descripción corta y atractiva del yate",
   "maxPeople": 10,
-  "priceRange": "<1000",
+  "priceRange": "< $1.000",
   "mainImage": "/boats/nombre-del-yate/main.png",
   "images": {
     "cabin": [

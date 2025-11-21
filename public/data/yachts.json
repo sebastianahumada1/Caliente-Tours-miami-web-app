@@ -6,7 +6,7 @@
       "slug": "flybridge-70ft",
       "description": "Aicon 85 is the Perfect Yacht for the Bahamas and Overnight",
       "maxPeople": 13,
-      "priceRange": "<1000",
+      "priceRange": "< $1.000",
       "mainImage": "/storage/v1/object/public/boats/boat1.png",
       "images": {
         "cabin": [
@@ -48,7 +48,7 @@
       "slug": "yacht-2",
       "description": "Luxury yacht perfect for day trips",
       "maxPeople": 10,
-      "priceRange": "<1000",
+      "priceRange": "< $1.000",
       "mainImage": "https://yhbvaclwzcqozaojffku.supabase.co/storage/v1/object/public/boats/boat2.png",
       "images": {
         "cabin": [],
@@ -69,7 +69,7 @@
       "slug": "yacht-3",
       "description": "Spacious yacht for family adventures",
       "maxPeople": 12,
-      "priceRange": "<1000",
+      "priceRange": "< $1.000",
       "mainImage": "https://yhbvaclwzcqozaojffku.supabase.co/storage/v1/object/public/boats/boat3.png",
       "images": {
         "cabin": [],
@@ -90,7 +90,7 @@
       "slug": "yacht-4",
       "description": "Premium yacht with modern amenities",
       "maxPeople": 15,
-      "priceRange": "<2000",
+      "priceRange": "$1.000-$1.500",
       "mainImage": "https://yhbvaclwzcqozaojffku.supabase.co/storage/v1/object/public/boats/boat4.png",
       "images": {
         "cabin": [],
@@ -111,7 +111,7 @@
       "slug": "yacht-5",
       "description": "Exclusive yacht for special occasions",
       "maxPeople": 14,
-      "priceRange": "<2000",
+      "priceRange": "$1.500-$2.000",
       "mainImage": "https://yhbvaclwzcqozaojffku.supabase.co/storage/v1/object/public/boats/boat5.png",
       "images": {
         "cabin": [],

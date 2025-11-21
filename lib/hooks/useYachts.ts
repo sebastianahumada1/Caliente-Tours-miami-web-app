@@ -10,6 +10,7 @@ export type Yacht = {
   slug: string;
   description: string;
   maxPeople: number;
+  maxPeopleImage: string | null;
   priceRange: string;
   mainImage: string;
   morePhotosUrl: string | null;
@@ -46,7 +47,7 @@ type BoatRow = {
   name: string;
   slug: string;
   description: string;
-  max_people: number;
+  max_people: string | null; // La columna max_people contiene la imagen
   price_range: string;
   main_image: string;
   more_photos_url: string | null;
@@ -58,12 +59,14 @@ function mapBoatRowToYacht(row: BoatRow): Yacht {
   const parsedImages = normalizeBoatImages(row.images);
   const parsedSpecs = normalizeBoatSpecs(row.specs);
 
+  // max_people contiene la imagen (URL de la imagen)
   return {
     id: row.id,
     name: row.name,
     slug: row.slug,
     description: row.description,
-    maxPeople: row.max_people,
+    maxPeople: 0, // Valor por defecto, ajustar si hay otra columna para el número
+    maxPeopleImage: row.max_people ? getPublicStorageUrl(row.max_people) : null,
     priceRange: row.price_range,
     mainImage: getPublicStorageUrl(row.main_image),
     morePhotosUrl: row.more_photos_url,

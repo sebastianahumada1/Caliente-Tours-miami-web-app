@@ -22,7 +22,7 @@ Todos los yates se almacenan en la tabla `boats` de tu proyecto Supabase.
 | `slug` | text | Identificador URL-friendly (único) |
 | `description` | text | Descripción corta usada en el hero |
 | `max_people` | integer | Capacidad máxima |
-| `price_range` | text | Rangos permitidos: `"<1000"`, `"<2000"`, `"<3000"`, `">4000"` |
+| `price_range` | text | Rangos permitidos: `"< $1.000"`, `"$1.000-$1.500"`, `"$1.500-$2.000"`, `"$2.000-$2.500"` |
 | `main_image` | text | Clave en Supabase Storage (`boats/tu-archivo.png`) |
 | `more_photos_url` | text | URL externa opcional para “More photos” |
 | `images` | jsonb | Objeto con arrays de claves por categoría |
@@ -37,7 +37,7 @@ Ejemplo de registro (`Row`) tal como se guarda en Supabase:
   "slug": "flybridge-70ft",
   "description": "Aicon 85 is the Perfect Yacht for the Bahamas and Overnight",
   "max_people": 13,
-  "price_range": "<1000",
+  "price_range": "< $1.000",
   "main_image": "boats/boat1.png",
   "more_photos_url": "https://calientetoursmiami.smugmug.com/55--PINK-AZIMUT-",
   "images": {
@@ -195,7 +195,7 @@ boats/
 | `slug` | string | URL-friendly identifier | `"flybridge-70ft"` |
 | `description` | string | Descripción breve | `"Perfect for day trips"` |
 | `maxPeople` | number | Capacidad máxima | `13` |
-| `priceRange` | string | Rango de precio | `"<1000"` o `"<2000"` o `"<3000"` o `">4000"` |
+| `priceRange` | string | Rango de precio | `"< $1.000"` o `"$1.000-$1.500"` o `"$1.500-$2.000"` o `"$2.000-$2.500"` |
 | `mainImage` | string | Clave de Storage | `"boats/boat1.png"` |
 | `images` | object | Objeto con arrays de claves | Ver estructura abajo |
 | `specs` | object | Especificaciones técnicas | Ver estructura abajo |
@@ -237,7 +237,7 @@ boats/
   "slug": "flybridge-70ft",
   "description": "Aicon 85 is the Perfect Yacht for the Bahamas and Overnight",
   "maxPeople": 13,
-  "priceRange": "<1000",
+  "priceRange": "< $1.000",
   "mainImage": "boats/boat1.png",
   "images": {
     "cabin": ["boats/boat1/cabin/interior1.jpeg"],
@@ -263,7 +263,7 @@ boats/
   "slug": "express-cruiser-55",
   "description": "Fast and comfortable day cruiser",
   "maxPeople": 8,
-  "priceRange": "<1000",
+  "priceRange": "< $1.000",
   "mainImage": "boats/express-cruiser-55/main.png",
   "images": {
     "cabin": [],
@@ -286,10 +286,10 @@ boats/
 
 Los yates se filtran por estos rangos:
 
-- `"<1000"` - Menos de $1,000 USD
-- `"<2000"` - Menos de $2,000 USD
-- `"<3000"` - Menos de $3,000 USD
-- `">4000"` - Más de $4,000 USD
+- `"< $1.000"` - Menos de $1.000 USD
+- `"$1.000-$1.500"` - Entre $1.000 y $1.499 USD
+- `"$1.500-$2.000"` - Entre $1.500 y $1.999 USD
+- `"$2.000-$2.500"` - Entre $2.000 y $2.499 USD
 
 **Importante:** Usa exactamente estos valores para que los filtros funcionen correctamente.
 
@@ -331,7 +331,7 @@ Los yates se filtran por estos rangos:
 
 ### Los filtros no funcionan
 
-1. Verifica que el `priceRange` sea exactamente uno de estos: `"<1000"`, `"<2000"`, `"<3000"`, `">4000"`
+1. Verifica que el `priceRange` sea exactamente uno de estos: `"< $1.000"`, `"$1.000-$1.500"`, `"$1.500-$2.000"`, `"$2.000-$2.500"`
 2. Las comillas son importantes: debe ser un string
 
 ---
