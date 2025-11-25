@@ -18,6 +18,12 @@ export function LenisProvider({ children }: LenisProviderProps) {
       return;
     }
 
+    // Disable Lenis on mobile devices (width < 1024px)
+    const isMobile = window.innerWidth < 1024;
+    if (isMobile) {
+      return;
+    }
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -25,10 +31,9 @@ export function LenisProvider({ children }: LenisProviderProps) {
       gestureOrientation: "vertical",
       smoothWheel: true,
       wheelMultiplier: 1,
-      smoothTouch: false,
       touchMultiplier: 2,
       infinite: false,
-      autoResize: false,
+      autoResize: true,
     });
 
     function raf(time: number) {

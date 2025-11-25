@@ -1,12 +1,15 @@
 export default function BoatRulesPage() {
   return (
-    <main className="min-h-screen bg-black text-white pt-20">
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        <h1 className="text-4xl font-bold mb-8 text-center" style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif" }}>
+    <main 
+      data-lenis-prevent
+      className="min-h-screen bg-black text-white pt-20 md:pt-24 overflow-y-auto"
+    >
+      <div className="w-full sm:max-w-4xl mx-auto px-4 md:px-6 py-8 md:py-12">
+        <h1 className="text-2xl md:text-4xl font-bold mb-6 md:mb-8 text-center" style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif" }}>
           BOAT RULES AND WARNINGS NOTIFICATION RULES
         </h1>
         
-        <div className="space-y-6 text-gray-300">
+        <div className="space-y-4 md:space-y-6 text-sm md:text-base text-gray-300">
           <ul className="space-y-4 list-disc list-inside">
             <li>Adults must accompany children at all times (Kids of 13 year or less must wear a lifejacket all the time).</li>
             <li>NOT Diving.</li>
@@ -25,8 +28,8 @@ export default function BoatRulesPage() {
             <li>You must follow the Captain instruction all time, is for your safety</li>
           </ul>
 
-          <div className="mt-8">
-            <h2 className="text-2xl font-bold mb-4 text-white" style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif" }}>
+          <div className="mt-6 md:mt-8">
+            <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-white" style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif" }}>
               Warnings:
             </h2>
             <ul className="space-y-4 list-disc list-inside">

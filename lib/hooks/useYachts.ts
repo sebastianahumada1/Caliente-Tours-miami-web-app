@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import {
   getSupabaseBrowserClient,
   getPublicStorageUrl,
+  type BoatsTable,
 } from "@/lib/supabase/client";
 
 export type Yacht = {
@@ -42,15 +43,8 @@ type BoatSpecs = {
   year?: number;
 };
 
-type BoatRow = {
-  id: number;
-  name: string;
-  slug: string;
-  description: string;
-  max_people: string | null; // La columna max_people contiene la imagen
-  price_range: string;
-  main_image: string;
-  more_photos_url: string | null;
+type BoatRow = Omit<BoatsTable, "images" | "specs" | "max_people"> & {
+  max_people: BoatsTable["max_people"] | string | null;
   images: BoatImages | string | null;
   specs: BoatSpecs | string | null;
 };
@@ -59,14 +53,28 @@ function mapBoatRowToYacht(row: BoatRow): Yacht {
   const parsedImages = normalizeBoatImages(row.images);
   const parsedSpecs = normalizeBoatSpecs(row.specs);
 
-  // max_people contiene la imagen (URL de la imagen)
+  const rawMaxPeople = row.max_people;
+  const capacity =
+    typeof rawMaxPeople === "number"
+      ? rawMaxPeople
+      : typeof rawMaxPeople === "string"
+        ? Number.parseInt(rawMaxPeople, 10) || 0
+        : 0;
+
+  const legacyImagePath =
+    typeof rawMaxPeople === "string" && rawMaxPeople.includes("/")
+      ? rawMaxPeople
+      : null;
+
+  const maxPeopleImagePath = row.max_people_image ?? legacyImagePath ?? null;
+
   return {
     id: row.id,
     name: row.name,
     slug: row.slug,
     description: row.description,
-    maxPeople: 0, // Valor por defecto, ajustar si hay otra columna para el número
-    maxPeopleImage: row.max_people ? getPublicStorageUrl(row.max_people) : null,
+    maxPeople: capacity,
+    maxPeopleImage: maxPeopleImagePath ? getPublicStorageUrl(maxPeopleImagePath) : null,
     priceRange: row.price_range,
     mainImage: getPublicStorageUrl(row.main_image),
     morePhotosUrl: row.more_photos_url,

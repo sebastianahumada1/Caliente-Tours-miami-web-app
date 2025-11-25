@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useYachts, type Yacht } from "@/lib/hooks/useYachts";
+import { useSwipe } from "@/lib/hooks/useSwipe";
 
 /**
  * BoatsHero Component
@@ -30,6 +31,7 @@ export function BoatsHero() {
   const [carouselMode, setCarouselMode] = useState<CarouselMode>("Interior"); // Control carousel type
   const [carouselActiveIndex, setCarouselActiveIndex] = useState(1); // For Price/Service carousel
   const [previewImage, setPreviewImage] = useState<string | null>(null); // Image preview overlay
+  const [isMobile, setIsMobile] = useState(false); // Mobile detection
 
   const priceRanges = useMemo(() => {
     const unique = new Set<string>();
@@ -44,7 +46,8 @@ export function BoatsHero() {
 
       if (normalized.startsWith("<")) {
         const numberPart = normalized.replace(/[^\d]/g, "");
-        return Number(numberPart) || Number.MAX_SAFE_INTEGER;
+        // Restamos 1 para que "< 1000" (999) aparezca antes que "1000-1500" (1000)
+        return (Number(numberPart) || Number.MAX_SAFE_INTEGER) - 1;
       }
 
       if (normalized.startsWith(">")) {
@@ -72,6 +75,14 @@ export function BoatsHero() {
       );
     }
   }, [priceRanges]);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Sincronizar el índice del carrusel cuando cambia el filtro interior
   useEffect(() => {
@@ -123,6 +134,52 @@ export function BoatsHero() {
 
   const filteredBoats = getFilteredBoats();
 
+  // Swipe handlers for main carousel
+  const mainCarouselSwipe = useSwipe(
+    () => {
+      // Swipe left - next boat
+      if (!showDetails) {
+        const nextIndex = (activeIndex + 1) % filteredBoats.length;
+        setActiveIndex(nextIndex);
+      }
+    },
+    () => {
+      // Swipe right - previous boat
+      if (!showDetails) {
+        const prevIndex = (activeIndex - 1 + filteredBoats.length) % filteredBoats.length;
+        setActiveIndex(prevIndex);
+      }
+    }
+  );
+
+  // Swipe handlers for detail carousel
+  const detailCarouselSwipe = useSwipe(
+    () => {
+      // Swipe left - next image
+      if (showDetails) {
+        if (carouselMode === "Interior") {
+          const nextIndex = (interiorImageIndex + 1) % interiorImages.length;
+          setInteriorImageIndex(nextIndex);
+        } else {
+          const nextIndex = (carouselActiveIndex + 1) % carouselItems.length;
+          setCarouselActiveIndex(nextIndex);
+        }
+      }
+    },
+    () => {
+      // Swipe right - previous image
+      if (showDetails) {
+        if (carouselMode === "Interior") {
+          const prevIndex = (interiorImageIndex - 1 + interiorImages.length) % interiorImages.length;
+          setInteriorImageIndex(prevIndex);
+        } else {
+          const prevIndex = (carouselActiveIndex - 1 + carouselItems.length) % carouselItems.length;
+          setCarouselActiveIndex(prevIndex);
+        }
+      }
+    }
+  );
+
   // Loading state
   if (loading) {
     return (
@@ -153,23 +210,21 @@ export function BoatsHero() {
   // Get the current arrangement based on active index
   const getBoatPosition = (index: number) => {
     const totalBoats = filteredBoats.length;
+    
+    // Calcular la diferencia relativa circular
     let diff = (index - activeIndex + totalBoats) % totalBoats;
     
-    // Para 3 barcos, solo hay left, center, right
-    if (totalBoats === 3) {
-      if (diff === 0) return "center";  // Centro
-      if (diff === 1) return "right";   // Derecha
-      return "left";                    // Izquierda
-    }
+    // Ajustar diff para que esté en el rango [-totalBoats/2, totalBoats/2]
+    if (diff > totalBoats / 2) diff -= totalBoats;
     
-    // Para 5 barcos (lógica original)
-    if (diff > 2) diff -= totalBoats;
+    if (diff === 0) return "center";
+    if (diff === 1) return "right";
+    if (diff === -1) return "left";
     
-    if (diff === 0) return "center";                    // Centro (visible)
-    if (diff === 1 || diff === -4) return "right";      // Derecha (visible)
-    if (diff === -1 || diff === 4) return "left";       // Izquierda (visible)
-    if (diff === 2 || diff === -3) return "far-right";  // Muy derecha (oculto)
-    return "far-left";                                  // Muy izquierda (oculto)
+    // Cualquier otro bote está "lejos" y debe ocultarse
+    // Distinguimos dirección para la animación de salida
+    if (diff > 0) return "far-right";
+    return "far-left";
   };
 
   const handlePriceFilter = (filter: PriceFilter) => {
@@ -288,18 +343,24 @@ export function BoatsHero() {
               href={selectedBoat.morePhotosUrl} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="px-8 text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg"
+              className="px-6 md:px-8 text-white text-xs md:text-base font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg whitespace-nowrap"
               style={{ 
                 fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
                 position: "absolute",
-                top: "calc(28% + 3.5cm)",
-                left: "50%",
-                transform: "translateX(-50%)",
+                top: window.innerWidth < 1024 ? "calc(50% - 2rem)" : "calc(28% + 3.5cm)",
+                left: window.innerWidth < 1024 ? "5%" : "50%",
+                transform: window.innerWidth < 1024 
+                  ? "translateY(-50%) rotate(-90deg)" 
+                  : "translateX(-50%)",
+                transformOrigin: window.innerWidth < 1024 ? "center center" : "center",
                 zIndex: 150,
                 pointerEvents: "auto",
-                paddingTop: "0.5rem",
-                paddingBottom: "0.5rem",
-                backgroundColor: "#930775"
+                paddingTop: window.innerWidth < 1024 ? "0.4rem" : "0.5rem",
+                paddingBottom: window.innerWidth < 1024 ? "0.4rem" : "0.5rem",
+                paddingLeft: window.innerWidth < 1024 ? "0.8rem" : undefined,
+                paddingRight: window.innerWidth < 1024 ? "0.8rem" : undefined,
+                backgroundColor: "#930775",
+                fontSize: window.innerWidth < 1024 ? "0.65rem" : undefined
               }}
             >
               More photos
@@ -308,102 +369,208 @@ export function BoatsHero() {
 
           {/* Carrusel de fotos interiores - Posición absoluta en el centro */}
           <div 
-            className="w-auto flex flex-col items-center justify-center" 
+            className={`w-auto flex flex-col items-center ${isMobile ? 'justify-center pt-24' : 'justify-center'}`}
             style={{ 
-              transform: "translateX(-50%) translateY(calc(-50% - 4.5cm)) scale(0.58)", 
+              transform: isMobile
+                ? "translateX(-50%) translateY(-50%)"
+                : "translateX(-50%) translateY(calc(-50% - 4.5cm)) scale(0.58)", 
               position: "absolute", 
               top: "50%", 
               left: "50%",
               zIndex: 60,
-              pointerEvents: "auto"
+              pointerEvents: "none"
             }}
+            {...detailCarouselSwipe}
           >
             
-            {/* Carrusel unificado */}
-            <div
-              className="relative w-[1200px] h-[400px] flex items-center justify-center transition-all duration-700 ease-out"
-              style={{ 
-                perspective: "1500px", 
-                transform: "scale(0.9)"
-              }}
-            >
-              {carouselItems.map((item, index) => {
-                const totalItems = carouselItems.length;
-                const isInteriorMode = carouselMode === "Interior";
-                const isPriceMode = carouselMode === "Price";
-                
-                // Usar cálculo circular para ambos modos para transición suave
-                let distance = (index - (isInteriorMode ? interiorImageIndex : carouselActiveIndex) + totalItems) % totalItems;
+            {isMobile ? (
+              // Mobile layout: vertical with main image on top, two small below
+              <div className="flex-1 flex flex-col items-center justify-center w-full">
+                {/* Imagen principal arriba */}
+                <div className="flex items-center justify-center mb-6">
+                  {carouselItems.map((item, index) => {
+                    const totalItems = carouselItems.length;
+                    const isInteriorMode = carouselMode === "Interior";
+                    let distance = (index - (isInteriorMode ? interiorImageIndex : carouselActiveIndex) + totalItems) % totalItems;
+                    
+                    if (distance > totalItems / 2) distance -= totalItems;
+                    if (distance < -totalItems / 2) distance += totalItems;
+                    
+                    if (distance !== 0) return null; // Solo mostrar la imagen central
+                    
+                    const handleItemClick = () => {
+                      if (isInteriorMode) {
+                        handleInteriorImageClick(index, item.src);
+                      } else {
+                        setPreviewImage(item.src);
+                      }
+                    };
+                    
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={handleItemClick}
+                        className="cursor-pointer transition-all duration-500 w-[90%] max-w-[300px]"
+                        style={{ pointerEvents: "auto" }}
+                      >
+                        <img
+                          src={item.src}
+                          alt={item.alt}
+                          className={`w-full rounded-xl shadow-2xl ${
+                            isInteriorMode ? "object-cover" : "object-contain"
+                          }`}
+                          style={{
+                            height: "180px",
+                            objectFit: "cover"
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
 
-                // Ajustar distancia para que sea circular
-                if (distance > totalItems / 2) {
-                  distance -= totalItems;
-                }
-                if (distance < -totalItems / 2) {
-                  distance += totalItems;
-                }
+                {/* Imágenes de navegación abajo */}
+                <div className="flex gap-4 justify-center items-center">
+                  {carouselItems.map((item, index) => {
+                    const totalItems = carouselItems.length;
+                    const isInteriorMode = carouselMode === "Interior";
+                    let distance = (index - (isInteriorMode ? interiorImageIndex : carouselActiveIndex) + totalItems) % totalItems;
+                    
+                    if (distance > totalItems / 2) distance -= totalItems;
+                    if (distance < -totalItems / 2) distance += totalItems;
+                    
+                    // Mostrar solo left (-1) y right (+1)
+                    if (distance !== -1 && distance !== 1) return null;
+                    
+                    const handleItemClick = () => {
+                      if (isInteriorMode) {
+                        setInteriorImageIndex(index);
+                      } else {
+                        setCarouselActiveIndex(index);
+                      }
+                    };
+                    
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={handleItemClick}
+                        className="relative cursor-pointer transition-all duration-500 hover:scale-110 active:scale-95"
+                        style={{
+                          width: "35vw",
+                          maxWidth: "160px",
+                          opacity: 0.85,
+                          pointerEvents: "auto"
+                        }}
+                      >
+                        <img
+                          src={item.src}
+                          alt={item.alt}
+                          className={`w-full h-auto rounded-xl shadow-xl grayscale ${
+                            isInteriorMode ? "object-cover" : "object-contain"
+                          }`}
+                          style={{
+                            transform: "scale(0.6)",
+                            filter: "grayscale(100%)"
+                          }}
+                        />
+                        <div 
+                          className="absolute inset-0 rounded-xl border-2 border-white/40 pointer-events-none"
+                          style={{
+                            boxShadow: "0 4px 8px rgba(0,0,0,0.4)"
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              // Desktop layout: horizontal carousel
+              <div
+                className="relative w-[1200px] h-[400px] flex items-center justify-center transition-all duration-700 ease-out"
+                style={{ 
+                  perspective: "1500px", 
+                  transform: "scale(0.9)"
+                }}
+              >
+                {carouselItems.map((item, index) => {
+                  const totalItems = carouselItems.length;
+                  const isInteriorMode = carouselMode === "Interior";
+                  const isPriceMode = carouselMode === "Price";
+                  
+                  // Usar cálculo circular para ambos modos para transición suave
+                  let distance = (index - (isInteriorMode ? interiorImageIndex : carouselActiveIndex) + totalItems) % totalItems;
 
-                const absDistance = Math.abs(distance);
-
-                // Mostrar 3 imágenes (1 a cada lado del centro)
-                if (absDistance > 1) return null;
-
-                const isCenter = distance === 0;
-                const translateX = distance * (isPriceMode ? 120 : 80); // Mayor separación horizontal
-                const translateY = isCenter ? 0 : Math.abs(distance) * 8; // Menos separación vertical
-                const baseScale = isInteriorMode ? 1 : isPriceMode ? 1.32 : 0.95;
-                const scale =
-                  (isCenter ? 1.1 : 0.95) * baseScale; // Menos diferencia de escala entre central y laterales
-                const zIndex = 10 - absDistance;
-                const rotateY = distance * 15; // Menos rotación
-                const rotateZ = distance * 2; // Menos rotación Z
-                const opacity = isCenter ? 1 : 0.95; // Mayor opacidad en laterales para que se vean mejor
-                const isInteriorImage = isInteriorMode;
-
-                const handleItemClick = () => {
-                  if (isInteriorImage) {
-                    handleInteriorImageClick(index, item.src);
-                  } else {
-                    if (index === carouselActiveIndex) {
-                      setPreviewImage(item.src);
-                      return;
-                    }
-                    setCarouselActiveIndex(index);
+                  // Ajustar distancia para que sea circular
+                  if (distance > totalItems / 2) {
+                    distance -= totalItems;
                   }
-                };
+                  if (distance < -totalItems / 2) {
+                    distance += totalItems;
+                  }
 
-                return (
-                  <div
-                    key={item.id}
-                    onClick={handleItemClick}
-                    className="absolute cursor-pointer transition-all duration-700 ease-out hover:scale-105"
-                    style={{
-                      transform: `translateX(${translateX}%) translateY(${translateY}%) scale(${scale}) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`,
-                      zIndex,
-                      opacity,
-                      width: isPriceMode ? "520px" : "552px",
-                      height: isPriceMode ? "370px" : "396px",
-                      pointerEvents: "auto",
-                    }}
-                  >
-                    <img
-                      src={item.src}
-                      alt={item.alt}
-                      className={`w-full h-full rounded-xl shadow-2xl ${
-                        isInteriorImage ? "object-cover" : "object-contain"
-                      }`}
+                  const absDistance = Math.abs(distance);
+
+                  // Desktop: mostrar 3 imágenes
+                  if (absDistance > 1) return null;
+
+                  const isCenter = distance === 0;
+                  const translateX = distance * (isPriceMode ? 120 : 80); // Mayor separación horizontal
+                  const translateY = isCenter ? 0 : Math.abs(distance) * 8; // Menos separación vertical
+                  const baseScale = isInteriorMode ? 1 : isPriceMode ? 1.32 : 0.95;
+                  const scale =
+                    (isCenter ? 1.1 : 0.95) * baseScale; // Menos diferencia de escala entre central y laterales
+                  const zIndex = 10 - absDistance;
+                  const rotateY = distance * 15; // Menos rotación
+                  const rotateZ = distance * 2; // Menos rotación Z
+                  const opacity = isCenter ? 1 : 0.95; // Mayor opacidad en laterales para que se vean mejor
+                  const isInteriorImage = isInteriorMode;
+
+                  const handleItemClick = () => {
+                    if (isInteriorImage) {
+                      handleInteriorImageClick(index, item.src);
+                    } else {
+                      if (index === carouselActiveIndex) {
+                        setPreviewImage(item.src);
+                        return;
+                      }
+                      setCarouselActiveIndex(index);
+                    }
+                  };
+
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={handleItemClick}
+                      className="absolute cursor-pointer transition-all duration-700 ease-out hover:scale-105"
                       style={{
-                        transformStyle: "preserve-3d",
-                        imageRendering: "auto",
-                        filter: "none", // Todas las imágenes con color completo
-                        backgroundColor: undefined,
-                        pointerEvents: "none", // Evita que la imagen bloquee el click
+                        transform: `translateX(${translateX}%) translateY(${translateY}%) scale(${scale}) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`,
+                        zIndex,
+                        opacity,
+                        width: isPriceMode ? "520px" : "552px",
+                        height: isPriceMode ? "370px" : "396px",
+                        pointerEvents: "auto",
                       }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
+                    >
+                      <img
+                        src={item.src}
+                        alt={item.alt}
+                        className={`w-full h-full rounded-xl shadow-2xl ${
+                          isInteriorImage ? "object-cover" : "object-contain"
+                        }`}
+                        style={{
+                          transformStyle: "preserve-3d",
+                          imageRendering: "auto",
+                          filter: "none", // Todas las imágenes con color completo
+                          backgroundColor: undefined,
+                          pointerEvents: "none", // Evita que la imagen bloquee el click
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             
           </div>
 
@@ -411,9 +578,9 @@ export function BoatsHero() {
           <div 
             className="w-auto flex flex-col items-center justify-center relative z-10" 
             style={{ 
-              transform: "scale(1.69)",
+              transform: window.innerWidth < 1024 ? "scale(1)" : "scale(1.69)",
               position: "absolute",
-              bottom: "calc(8vh - 2.2cm)", // Cambia este valor para mover el bote arriba/abajo (más negativo = más abajo)
+              bottom: window.innerWidth < 1024 ? "calc(5vh - 1cm)" : "calc(8vh - 2.2cm)",
               left: "50%",
               marginLeft: "-50%",
               width: "100%"
@@ -422,9 +589,9 @@ export function BoatsHero() {
             <div 
               className="flex items-center justify-center"
               style={{
-                width: "423.36px", // 20% más pequeño que el anterior
-                height: "282.24px", // 20% más pequeño que el anterior
-                margin: "0 auto" // Centrado horizontal
+                width: window.innerWidth < 1024 ? "336px" : "423.36px",
+                height: window.innerWidth < 1024 ? "223.2px" : "282.24px",
+                margin: "0 auto"
               }}
             >
               <img
@@ -434,20 +601,20 @@ export function BoatsHero() {
               />
             </div>
             <div 
-              className="flex items-center justify-center gap-4" 
+              className="flex items-center justify-center gap-2 md:gap-4 px-4" 
               style={{ 
                 position: "relative",
-                top: "-2.5cm", // Cambia este valor para mover el texto arriba/abajo (negativo = más arriba, positivo = más abajo)
+                top: window.innerWidth < 1024 ? "-1.5cm" : "-2.5cm",
                 marginTop: "0",
                 marginBottom: "0",
-                transform: "translateX(0.3cm)" // Mueve todo el contenedor 2 cm a la derecha para centrarlo mejor
+                transform: window.innerWidth < 1024 ? "translateX(0)" : "translateX(0.3cm)"
               }}
             >
               <h2 
-                className="font-bold italic text-white" 
+                className="font-bold italic text-white text-center" 
                 style={{ 
                   fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif", 
-                  fontSize: "2.3rem", // Cambia este valor para el tamaño (ej: "1.8rem" = más pequeño, "2.5rem" = más grande)
+                  fontSize: window.innerWidth < 1024 ? "1.3rem" : "2.3rem",
                   margin: "0"
                 }}
               >
@@ -458,11 +625,21 @@ export function BoatsHero() {
                   src={selectedBoat.maxPeopleImage}
                   alt={`Max ${selectedBoat.maxPeople} people`}
                   className="w-auto object-contain"
-                  style={{ height: "3.6rem", maxHeight: "3.6rem" }}
+                  style={{ height: window.innerWidth < 1024 ? "2rem" : "3.6rem", maxHeight: window.innerWidth < 1024 ? "2rem" : "3.6rem" }}
                 />
               )}
             </div>
-            <p className="mt-4 text-white text-center" style={{ transform: "translateY(-2.89cm)", maxWidth: "600px", fontSize: "0.875rem", fontWeight: "300", letterSpacing: "-0.02em" }}>
+            <p 
+              className="mt-4 text-white text-center px-4" 
+              style={{ 
+                transform: window.innerWidth < 1024 ? "translateY(-1.2cm)" : "translateY(-2.89cm)", 
+                maxWidth: window.innerWidth < 1024 ? "90%" : "600px", 
+                fontSize: window.innerWidth < 1024 ? "0.75rem" : "0.875rem", 
+                fontWeight: "300", 
+                letterSpacing: "-0.02em",
+                display: window.innerWidth < 1024 ? "none" : "block"
+              }}
+            >
               {selectedBoat.description}
             </p>
           </div>
@@ -472,17 +649,17 @@ export function BoatsHero() {
             href="https://api.whatsapp.com/send?phone=17868043744&text=Hello%2C%20I%20need%20more%20info%20to%20rent%20a%20Yacht"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-8 text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg inline-block"
+            className="px-6 md:px-8 text-white text-sm md:text-base font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg inline-block"
             style={{ 
               fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
               position: "absolute",
-              bottom: "calc(8vh + 2.3cm)",
+              bottom: window.innerWidth < 1024 ? "calc(5vh + 1.5cm)" : "calc(8vh + 2.3cm)",
               left: "50%",
               transform: "translateX(-50%)",
               zIndex: 150,
               pointerEvents: "auto",
-              paddingTop: "0.5rem",
-              paddingBottom: "0.5rem",
+              paddingTop: window.innerWidth < 1024 ? "0.4rem" : "0.5rem",
+              paddingBottom: window.innerWidth < 1024 ? "0.4rem" : "0.5rem",
               backgroundColor: "#930775",
               textDecoration: "none"
             }}
@@ -491,95 +668,103 @@ export function BoatsHero() {
           </a>
 
           {/* Botones de filtro de interiores - Posición absoluta clickeable */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex justify-center gap-4" style={{ top: "50%", zIndex: 100, pointerEvents: "auto" }}>
-            <button
-              onClick={() => handleInteriorFilter("Cabin")}
-              className={`px-6 py-1.5 text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg ${
-                carouselMode === "Interior" && interiorFilter === "Cabin"
-                  ? ""
-                  : "bg-black hover:bg-gray-900"
-              }`}
-              style={{ 
-                fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
-                backgroundColor: carouselMode === "Interior" && interiorFilter === "Cabin" ? "#930775" : undefined,
-                pointerEvents: "auto"
-              }}
-            >
-              Cabin
-            </button>
-            <button
-              onClick={() => handleInteriorFilter("Deck")}
-              className={`px-6 py-1.5 text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg ${
-                carouselMode === "Interior" && interiorFilter === "Deck"
-                  ? ""
-                  : "bg-black hover:bg-gray-900"
-              }`}
-              style={{ 
-                fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
-                backgroundColor: carouselMode === "Interior" && interiorFilter === "Deck" ? "#930775" : undefined,
-                pointerEvents: "auto"
-              }}
-            >
-              Deck
-            </button>
-            <button
-              onClick={() => handleInteriorFilter("Yacht")}
-              className={`px-6 py-1.5 text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg ${
-                carouselMode === "Interior" && interiorFilter === "Yacht"
-                  ? ""
-                  : "bg-black hover:bg-gray-900"
-              }`}
-              style={{ 
-                fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
-                backgroundColor: carouselMode === "Interior" && interiorFilter === "Yacht" ? "#930775" : undefined,
-                pointerEvents: "auto"
-              }}
-            >
-              Yacht
-            </button>
-            <button
-              onClick={handlePriceClick}
-              className={`px-6 py-1.5 text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg ${
-                carouselMode === "Price"
-                  ? ""
-                  : "bg-black hover:bg-gray-900"
-              }`}
-              style={{ 
-                fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
-                backgroundColor: carouselMode === "Price" ? "#930775" : undefined,
-                pointerEvents: "auto"
-              }}
-            >
-              Price
-            </button>
-            <button
-              onClick={handleServiceClick}
-              className={`px-6 py-1.5 text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg ${
-                carouselMode === "Service"
-                  ? ""
-                  : "bg-black hover:bg-gray-900"
-              }`}
-              style={{ 
-                fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
-                backgroundColor: carouselMode === "Service" ? "#930775" : undefined,
-                pointerEvents: "auto"
-              }}
-            >
-              Service
-            </button>
+          <div 
+            className={`absolute left-1/2 -translate-x-1/2 px-4 ${isMobile ? 'top-[12%] w-[90%] max-w-[300px]' : 'top-[50%] w-auto'}`}
+            style={{ pointerEvents: "auto", zIndex: 200 }}
+          >
+            <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex justify-center gap-4 overflow-x-auto pb-2 scrollbar-hide'}`}>
+              <button
+                onClick={() => handleInteriorFilter("Cabin")}
+                className={`px-4 py-1.5 md:px-6 md:py-1.5 text-xs md:text-base text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg whitespace-nowrap ${isMobile ? 'w-full' : 'flex-shrink-0'} ${
+                  carouselMode === "Interior" && interiorFilter === "Cabin"
+                    ? ""
+                    : "bg-black hover:bg-gray-900"
+                }`}
+                style={{ 
+                  fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
+                  backgroundColor: carouselMode === "Interior" && interiorFilter === "Cabin" ? "#930775" : undefined,
+                  pointerEvents: "auto"
+                }}
+              >
+                Cabin
+              </button>
+              <button
+                onClick={() => handleInteriorFilter("Deck")}
+                className={`px-4 py-1.5 md:px-6 md:py-1.5 text-xs md:text-base text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg whitespace-nowrap ${isMobile ? 'w-full' : 'flex-shrink-0'} ${
+                  carouselMode === "Interior" && interiorFilter === "Deck"
+                    ? ""
+                    : "bg-black hover:bg-gray-900"
+                }`}
+                style={{ 
+                  fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
+                  backgroundColor: carouselMode === "Interior" && interiorFilter === "Deck" ? "#930775" : undefined,
+                  pointerEvents: "auto"
+                }}
+              >
+                Deck
+              </button>
+              <button
+                onClick={() => handleInteriorFilter("Yacht")}
+                className={`px-4 py-1.5 md:px-6 md:py-1.5 text-xs md:text-base text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg whitespace-nowrap ${isMobile ? 'w-full' : 'flex-shrink-0'} ${
+                  carouselMode === "Interior" && interiorFilter === "Yacht"
+                    ? ""
+                    : "bg-black hover:bg-gray-900"
+                }`}
+                style={{ 
+                  fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
+                  backgroundColor: carouselMode === "Interior" && interiorFilter === "Yacht" ? "#930775" : undefined,
+                  pointerEvents: "auto"
+                }}
+              >
+                Yacht
+              </button>
+              <button
+                onClick={handlePriceClick}
+                className={`px-4 py-1.5 md:px-6 md:py-1.5 text-xs md:text-base text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg whitespace-nowrap ${isMobile ? 'w-full' : 'flex-shrink-0'} ${
+                  carouselMode === "Price"
+                    ? ""
+                    : "bg-black hover:bg-gray-900"
+                }`}
+                style={{ 
+                  fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
+                  backgroundColor: carouselMode === "Price" ? "#930775" : undefined,
+                  pointerEvents: "auto"
+                }}
+              >
+                Price
+              </button>
+              <button
+                onClick={handleServiceClick}
+                className={`px-4 py-1.5 md:px-6 md:py-1.5 text-xs md:text-base text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg whitespace-nowrap ${isMobile ? 'w-full' : 'flex-shrink-0'} ${
+                  carouselMode === "Service"
+                    ? ""
+                    : "bg-black hover:bg-gray-900"
+                }`}
+                style={{ 
+                  fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
+                  backgroundColor: carouselMode === "Service" ? "#930775" : undefined,
+                  pointerEvents: "auto"
+                }}
+              >
+                Service
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Logo - Solo en vista principal */}
       {!showDetails && (
-      <div className="absolute left-1/2 -translate-x-1/2 z-20" style={{ top: "3cm" }}>
+      <div 
+        className={`absolute left-1/2 -translate-x-1/2 z-20 ${isMobile ? '' : 'top-[3cm]'}`}
+        style={isMobile ? { top: '4rem' } : undefined}
+      >
         <img 
           src="/logo.png" 
           alt="Logo" 
           className="w-auto drop-shadow-2xl" 
           style={{ 
-            height: "9.8rem", // 20% más grande (base: 6rem)
+            height: isMobile ? "4rem" : "9.8rem",
             width: "auto"
           }}
         />
@@ -588,8 +773,17 @@ export function BoatsHero() {
 
       {/* Badge - Solo en vista principal */}
       {!showDetails && (
-      <div className="relative z-10 mb-6" style={{ transform: "translateY(-1cm)" }}>
-        <span className="inline-block px-6 py-3 text-sm font-semibold tracking-widest uppercase bg-black text-white rounded-xl" style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif" }}>
+      <div 
+        className={`z-10 ${isMobile ? 'absolute left-1/2 -translate-x-1/2' : 'relative mb-6 -translate-y-[1cm]'}`}
+        style={isMobile ? { top: 'calc(4rem + 4rem + 1cm)' } : undefined}
+      >
+        <span 
+          className={`inline-block px-4 py-2 md:px-6 md:py-3 font-semibold tracking-widest uppercase bg-black text-white rounded-xl ${isMobile ? 'whitespace-nowrap' : ''}`}
+          style={{ 
+            fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
+            fontSize: isMobile ? '0.65rem' : undefined
+          }}
+        >
           TAKE THE RIDE • LIVE THE EXPERIENCE
         </span>
       </div>
@@ -597,123 +791,243 @@ export function BoatsHero() {
 
       {/* H1 - Solo en vista principal */}
       {!showDetails && (
-      <h1 className="relative z-10 text-5xl md:text-7xl lg:text-8xl font-bold italic text-white mb-12 text-center drop-shadow-2xl" style={{ transform: "translateY(-1cm)", lineHeight: "0.9", letterSpacing: "0.04em" }}>
+      <h1 
+        className={`z-10 font-bold italic text-white text-center drop-shadow-2xl ${
+          isMobile ? 'absolute left-1/2 -translate-x-1/2 whitespace-nowrap px-2' : 'relative text-7xl lg:text-8xl mb-12 -translate-y-[1cm] px-4'
+        }`}
+        style={isMobile ? { 
+          top: 'calc(4rem + 4rem + 1cm + 2.5rem)', 
+          lineHeight: "0.9", 
+          letterSpacing: "0.04em",
+          fontSize: '1.1rem'
+        } : { 
+          lineHeight: "0.9", 
+          letterSpacing: "0.04em" 
+        }}
+      >
         MIAMI YACHT RENTALS
       </h1>
       )}
 
       {/* Carrusel de Barcos Filtrados */}
       {!showDetails && (
-      <div className="absolute inset-0 flex items-end justify-center" style={{ bottom: "calc(20% - 3.5cm)" }}>
-        {filteredBoats.map((boat, index) => {
-          const position = getBoatPosition(index);
-          const isCenter = position === "center";
-          const isLeft = position === "left";
-          const isRight = position === "right";
-          const isFarLeft = position === "far-left";
-          const isFarRight = position === "far-right";
-
-          // Tamaño estándar para todos los contenedores
-          const containerWidth = 756;
-          const containerHeight = 504;
-          
-          // Escala visual para laterales (más pequeños visualmente pero mismo contenedor)
-          const visualScale = isCenter ? 1 : 0.67;
-
-          // Calcular posición horizontal (separación ajustada - 20% más juntos)
-          let translateX = "0%";
-          if (isLeft) translateX = "-64%";
-          if (isRight) translateX = "64%";
-          if (isFarLeft) translateX = "-168%";   // Oculto a la izquierda
-          if (isFarRight) translateX = "168%";   // Oculto a la derecha
-
-          // Ocultar barcos que están muy lejos
-          const isVisible = isCenter || isLeft || isRight;
-
-          return (
-            <div
-              key={boat.id}
-              onClick={() => handleBoatClick(index)}
-              className="absolute cursor-pointer transition-all duration-1000 ease-in-out group flex items-center justify-center"
-              style={{
-                width: `${containerWidth}px`,
-                height: `${containerHeight}px`,
-                left: "50%",
-                transform: `translateX(calc(-50% + ${translateX})) translateY(${isCenter ? "0" : "-1.5cm"}) ${isCenter ? "scale(1)" : "scale(0.95)"}`,
-                zIndex: isCenter ? 20 : 10,
-                opacity: isVisible ? (isCenter ? 1 : 0.9) : 0,
-                pointerEvents: isVisible ? "auto" : "none",
-              }}
-            >
-              <img
-                src={boat.mainImage}
-                alt={`${boat.name} - ${boat.specs.type}`}
-                className={`object-contain drop-shadow-2xl transition-all duration-1000 group-hover:animate-float ${
-                  isCenter ? "" : "grayscale"
-                }`}
-                style={{
-                  filter: isCenter ? "none" : "grayscale(100%)",
-                  width: `${containerWidth * visualScale}px`,
-                  height: `${containerHeight * visualScale}px`,
-                  maxWidth: "100%",
-                  maxHeight: "100%"
-                }}
-              />
-              {boat.name && isCenter && (
-                <button 
-                  onClick={() => handleShowDetails(boat)}
-                  className="absolute left-1/2 -translate-x-1/2 px-6 py-3 bg-black text-white font-semibold rounded-xl hover:bg-gray-900 hover:scale-105 shadow-lg whitespace-nowrap animate-scale-in"
-                  style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif", bottom: "3.5cm" }}
-                >
-                  {boat.name} Details
-                </button>
-              )}
+      <div 
+        className={`absolute ${
+          isMobile 
+            ? "inset-0 flex flex-col items-center pt-40" 
+            : "inset-0 flex items-end justify-center"
+        }`}
+        style={!isMobile ? { bottom: "calc(20% - 3.5cm)" } : undefined}
+        {...mainCarouselSwipe}
+      >
+        {isMobile ? (
+          <div className="flex-1 flex flex-col items-center justify-center w-full">
+            {/* Bote principal en el centro */}
+            <div className="flex items-center justify-center">
+              {filteredBoats.map((boat, index) => {
+                const position = getBoatPosition(index);
+                if (position !== "center") return null;
+                
+                return (
+                  <div
+                    key={boat.id}
+                    className="flex flex-col items-center justify-center transition-all duration-500"
+                    style={{
+                      width: "85vw",
+                      maxWidth: "500px"
+                    }}
+                  >
+                    <img
+                      src={boat.mainImage}
+                      alt={`${boat.name} - ${boat.specs.type}`}
+                      className="w-full h-auto object-contain drop-shadow-2xl"
+                      style={{
+                        transform: "scale(1.04)"
+                      }}
+                    />
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+
+            {/* Botón Details justo debajo del bote */}
+            <div className="mt-4">
+              {filteredBoats.map((boat, index) => {
+                const position = getBoatPosition(index);
+                if (position !== "center") return null;
+                
+                return (
+                  <button 
+                    key={boat.id}
+                    onClick={() => handleShowDetails(boat)}
+                    className="px-6 py-3 bg-black text-white text-sm font-semibold rounded-xl hover:bg-gray-900 hover:scale-105 shadow-lg whitespace-nowrap"
+                    style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif" }}
+                  >
+                    {boat.name} Details
+                  </button>
+                );
+              })}
+            </div>
+            
+            {/* Botes de navegación abajo */}
+            <div className="flex gap-6 justify-center items-center mt-8 mb-24">
+              {filteredBoats.map((boat, index) => {
+                const position = getBoatPosition(index);
+                if (position !== "left" && position !== "right") return null;
+                
+                return (
+                  <div
+                    key={boat.id}
+                    onClick={() => handleBoatClick(index)}
+                    className="relative cursor-pointer transition-all duration-500 hover:scale-110 active:scale-95"
+                    style={{
+                      width: "42vw",
+                      maxWidth: "210px",
+                      opacity: 0.85
+                    }}
+                  >
+                    <img
+                      src={boat.mainImage}
+                      alt={`${boat.name} - ${boat.specs.type}`}
+                      className="w-full h-auto object-contain drop-shadow-xl grayscale"
+                      style={{
+                        transform: "scale(0.715)",
+                        filter: "grayscale(100%)"
+                      }}
+                    />
+                    <div 
+                      className="absolute inset-0 rounded-xl border-2 border-white/40 pointer-events-none"
+                      style={{
+                        boxShadow: "0 4px 8px rgba(0,0,0,0.4)"
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          // Desktop layout
+          filteredBoats.map((boat, index) => {
+            const position = getBoatPosition(index);
+            const isCenter = position === "center";
+            const isLeft = position === "left";
+            const isRight = position === "right";
+            const isFarLeft = position === "far-left";
+            const isFarRight = position === "far-right";
+
+            // Tamaño estándar para todos los contenedores
+            const containerWidth = 756;
+            const containerHeight = 504;
+            
+            // Escala visual para laterales (más pequeños visualmente pero mismo contenedor)
+            const visualScale = isCenter ? 1 : 0.67;
+
+            // Calcular posición horizontal
+            let translateXDesktop = "0%";
+            if (isLeft) translateXDesktop = "-64%";
+            if (isRight) translateXDesktop = "64%";
+            if (isFarLeft) translateXDesktop = "-200%";
+            if (isFarRight) translateXDesktop = "200%";
+
+            // Ocultar barcos que están muy lejos
+            const isVisible = isCenter || isLeft || isRight;
+
+            return (
+              <div
+                key={boat.id}
+                onClick={() => handleBoatClick(index)}
+                className="absolute cursor-pointer transition-all duration-1000 ease-in-out group flex items-center justify-center"
+                style={{
+                  width: `${containerWidth}px`,
+                  height: `${containerHeight}px`,
+                  left: "50%",
+                  transform: `translateX(calc(-50% + ${translateXDesktop})) translateY(${isCenter ? "0" : "-1.5cm"}) ${isCenter ? "scale(1)" : "scale(0.95)"}`,
+                  zIndex: isCenter ? 20 : 10,
+                  opacity: isVisible ? (isCenter ? 1 : 0.9) : 0,
+                  pointerEvents: isVisible ? "auto" : "none",
+                  visibility: isVisible ? "visible" : "hidden",
+                  transitionProperty: "transform, opacity, visibility",
+                }}
+              >
+                <img
+                  src={boat.mainImage}
+                  alt={`${boat.name} - ${boat.specs.type}`}
+                  className={`object-contain drop-shadow-2xl transition-all duration-1000 group-hover:animate-float ${
+                    isCenter ? "" : "grayscale"
+                  }`}
+                  style={{
+                    filter: isCenter ? "none" : "grayscale(100%)",
+                    width: `${containerWidth * visualScale}px`,
+                    height: `${containerHeight * visualScale}px`,
+                    maxWidth: "100%",
+                    maxHeight: "100%"
+                  }}
+                />
+                {boat.name && isCenter && (
+                  <button 
+                    onClick={() => handleShowDetails(boat)}
+                    className="absolute left-1/2 -translate-x-1/2 px-6 py-3 bg-black text-white text-base font-semibold rounded-xl hover:bg-gray-900 hover:scale-105 shadow-lg whitespace-nowrap animate-scale-in"
+                    style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif", bottom: "3.5cm" }}
+                  >
+                    {boat.name} Details
+                  </button>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
       )}
 
       {/* Botones de precio */}
       {!showDetails && (
-      <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-4 z-30">
-        {priceRanges.map((range) => (
-          <button
-            key={range}
-            onClick={() => handlePriceFilter(range)}
-            className={`px-6 py-3 text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg ${
-              priceFilter === range
-                ? ""
-                : "bg-black hover:bg-gray-900"
-            }`}
-            style={{ 
-              fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
-              backgroundColor: priceFilter === range ? "#930775" : undefined
-            }}
-          >
-            {range}
-          </button>
-        ))}
+      <div 
+        className="absolute left-0 right-0 z-30 px-4"
+        style={{ bottom: isMobile ? "1.5rem" : "2rem" }}
+      >
+        <div className={`${isMobile ? 'flex flex-col gap-2 items-center' : 'flex justify-center gap-4 overflow-x-auto pb-2 scrollbar-hide'}`}>
+          {priceRanges.map((range) => (
+            <button
+              key={range}
+              onClick={() => handlePriceFilter(range)}
+              className={`px-4 py-2 md:px-6 md:py-3 text-xs md:text-base text-white font-semibold rounded-xl hover:scale-105 transition-all duration-300 shadow-lg whitespace-nowrap ${
+                isMobile ? 'w-[85%] max-w-[300px]' : 'flex-shrink-0'
+              } ${
+                priceFilter === range
+                  ? ""
+                  : "bg-black hover:bg-gray-900"
+              }`}
+              style={{ 
+                fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif",
+                backgroundColor: priceFilter === range ? "#930775" : undefined
+              }}
+            >
+              {range}
+            </button>
+          ))}
+        </div>
       </div>
       )}
 
       {/* Image preview overlay */}
       {previewImage && (
         <div
-          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/80 p-6"
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/80 p-4 md:p-6"
           onClick={handleClosePreview}
         >
           <button
             onClick={handleClosePreview}
-            className="absolute top-6 right-6 px-4 py-2 bg-black text-white font-semibold rounded-lg shadow-lg hover:bg-gray-900 transition-colors"
+            className="absolute top-4 right-4 md:top-6 md:right-6 w-12 h-12 md:w-auto md:h-auto md:px-4 md:py-2 bg-black text-white font-semibold rounded-lg shadow-lg hover:bg-gray-900 transition-colors flex items-center justify-center"
             style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif" }}
           >
-            Close
+            <span className="hidden md:inline">Close</span>
+            <span className="md:hidden text-2xl">×</span>
           </button>
           <img
             src={previewImage}
             alt="Interior preview"
-            className="max-h-[90vh] max-w-[90vw] object-contain rounded-xl shadow-2xl"
+            className="max-h-[70vh] max-w-[90vw] md:max-h-[90vh] md:max-w-[90vw] object-contain rounded-xl shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           />
         </div>

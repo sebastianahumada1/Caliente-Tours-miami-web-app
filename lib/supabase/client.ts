@@ -9,12 +9,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-type BoatsTable = {
+export type BoatsTable = {
   id: number;
   name: string;
   slug: string;
   description: string;
   max_people: number;
+  max_people_image?: string | null;
   price_range: string;
   main_image: string;
   more_photos_url: string | null;

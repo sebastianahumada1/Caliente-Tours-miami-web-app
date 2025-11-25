@@ -202,3 +202,36 @@ html {
   }
 }
 
+/* Utility class for hiding scrollbar */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Landscape orientation warning for mobile devices */
+@media (max-width: 1024px) and (orientation: landscape) {
+  body::after {
+    content: "🔄 For the best experience, please rotate your device to portrait mode";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #667093 0%, #930775 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 3rem;
+    z-index: 99999;
+    font-family: 'Bank Gothic Medium', 'Arial Black', sans-serif;
+    line-height: 1.6;
+  }
+}
+

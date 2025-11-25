@@ -22,6 +22,7 @@ Todos los yates se almacenan en la tabla `boats` de tu proyecto Supabase.
 | `slug` | text | Identificador URL-friendly (único) |
 | `description` | text | Descripción corta usada en el hero |
 | `max_people` | integer | Capacidad máxima |
+| `max_people_image` | text | (Opcional) Imagen/ícono que se muestra junto al nombre |
 | `price_range` | text | Rangos permitidos: `"< $1.000"`, `"$1.000-$1.500"`, `"$1.500-$2.000"`, `"$2.000-$2.500"` |
 | `main_image` | text | Clave en Supabase Storage (`boats/tu-archivo.png`) |
 | `more_photos_url` | text | URL externa opcional para “More photos” |
@@ -88,6 +89,7 @@ Ejemplo de registro (`Row`) tal como se guarda en Supabase:
 1. Ve a tu proyecto Supabase → `Table Editor` → tabla `boats`.
 2. Haz clic en **Insert Row** y completa los campos:
    - `name`, `slug`, `description`, `max_people`, `price_range`, `main_image`.
+   - `max_people_image`: opcional, clave en Supabase Storage para el ícono de capacidad (por ejemplo `boats/assets/max-13.png`).
    - `images`: pega un objeto JSON con tus rutas.
    - `more_photos_url`: opcional, agrega un enlace externo para abrir una galería.
    - `specs`: pega un objeto JSON con la información técnica.
@@ -199,6 +201,8 @@ boats/
 | `mainImage` | string | Clave de Storage | `"boats/boat1.png"` |
 | `images` | object | Objeto con arrays de claves | Ver estructura abajo |
 | `specs` | object | Especificaciones técnicas | Ver estructura abajo |
+
+> **Tip:** Si quieres mostrar un ícono junto al nombre del barco, sube la imagen al bucket `boats` y guarda la clave en `max_people_image`.
 
 ### Estructura de `images`
 

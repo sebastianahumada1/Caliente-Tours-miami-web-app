@@ -1,14 +1,17 @@
 export default function TermsAndPoliciesPage() {
   return (
-    <main className="min-h-screen bg-black text-white pt-20">
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        <h1 className="text-4xl font-bold mb-8 text-center" style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif" }}>
+    <main 
+      data-lenis-prevent
+      className="min-h-screen bg-black text-white pt-20 md:pt-24 overflow-y-auto"
+    >
+      <div className="w-full sm:max-w-4xl mx-auto px-4 md:px-6 py-8 md:py-12">
+        <h1 className="text-2xl md:text-4xl font-bold mb-6 md:mb-8 text-center" style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif" }}>
           TERMS AND POLICIES
         </h1>
         
-        <div className="space-y-8 text-gray-300">
+        <div className="space-y-6 md:space-y-8 text-sm md:text-base text-gray-300">
           <div>
-            <h2 className="text-2xl font-bold mb-4 text-white" style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif" }}>
+            <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-white" style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif" }}>
               RESERVATIONS & RESCHEDULING
             </h2>
             <p className="leading-relaxed">
@@ -17,7 +20,7 @@ export default function TermsAndPoliciesPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold mb-4 text-white" style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif" }}>
+            <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-white" style={{ fontFamily: "'Bank Gothic Medium', 'Arial Black', sans-serif" }}>
               CANCELLATIONS & WEATHER PROVISION
             </h2>
             <p className="leading-relaxed">

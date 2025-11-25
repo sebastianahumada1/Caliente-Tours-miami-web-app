@@ -45,7 +45,17 @@ SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key
 # Resend
 RESEND_API_KEY=tu_api_key_de_resend
 RESEND_FROM_EMAIL=noreply@calientetoursmiami.com
+
+# Google Places (Reviews automáticos)
+GOOGLE_PLACES_API_KEY=tu_api_key_de_google_places
+GOOGLE_PLACE_ID=tu_place_id_de_google_maps
 ```
+
+> 🗺️ **Cómo obtener el Place ID y la API key**
+> 1. Entra a [Google Cloud Console](https://console.cloud.google.com/), crea un proyecto y habilita **Places API**.
+> 2. Genera una **API Key restringida** (solo para `places.googleapis.com`).
+> 3. Abre [Google Place ID Finder](https://developers.google.com/maps/documentation/places/web-service/place-id) y busca tu negocio (ej. _Caliente Tours Miami_). Copia el `place_id`.
+> 4. Rellena `GOOGLE_PLACES_API_KEY` y `GOOGLE_PLACE_ID` en `.env.local`.
 
 4. **Preparar imágenes**:
 - `bg-miami.jpg` permanece en `/public` (fondo del hero).
@@ -179,6 +189,13 @@ Componente `MapRoutes` con:
    - `guests` (integer)
    - `message` (text, nullable)
    - `created_at` (timestamp)
+
+### Reviews desde Google Maps (actualización manual)
+
+- API Route en `/api/reviews` que consulta Google Places y se revalida automáticamente cada hora
+- Hook `useReviews` que expone un botón/manual refresh para traer los datos cuando lo necesites
+- Página `/reviews` con tarjetas responsivas, estado de carga y manejo de errores
+- Requiere configurar `GOOGLE_PLACES_API_KEY` y `GOOGLE_PLACE_ID` en `.env.local`
 
 ## 📁 Estructura del Proyecto
 
