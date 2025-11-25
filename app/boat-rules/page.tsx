@@ -36,7 +36,7 @@ export default function BoatRulesPage() {
               <li>Not recommended for travelers with back problems.</li>
               <li>Not recommended for travelers with heart problems or other serious medical conditions.</li>
               <li>Not recommended for pregnant travelers.</li>
-              <li>If you have any other health conditions and aren't sure if you should ride, contact your doctor before doing the activity.</li>
+              <li>If you have any other health conditions and aren&apos;t sure if you should ride, contact your doctor before doing the activity.</li>
               <li>Not wheelchair accessible.</li>
               <li>Minimum drinking age is 21 years.</li>
             </ul>
